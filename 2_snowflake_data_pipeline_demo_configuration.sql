@@ -6,9 +6,75 @@
 --
 USE DATABASE INT;
 
+/********************************************************************
+ ** Reference data create section
+ ********************************************************************/
+USE DATABASE INT;
+CREATE SCHEMA IF NOT EXISTS REFERENCE;
+MERGE INTO REFERENCE.TILE_SCORE D
+USING (
+    --CREATE OR REPLACE TABLE REFERENCE.TILE_SCORE AS
+    SELECT $1::VARCHAR TITLE,
+        $2::FLOAT SCORE
+    FROM VALUES 
+      ('C-level', 20),
+      ('VP', 15),
+      ('Director', 10),
+      ('Manager', 5)
+) S
+ON D.TITLE = S.TITLE
+WHEN NOT MATCHED THEN INSERT(TITLE, SCORE) VALUES(S.TITLE, S.SCORE)
+WHEN MATCHED THEN UPDATE SET SCORE = S.SCORE;
+
+MERGE INTO REFERENCE.PLATFORM D
+USING (
+    --CREATE OR REPLACE TABLE REFERENCE.PLATFORM AS
+    SELECT $1::NUMBER PLATFORM_ID,
+        $2::VARCHAR PLATFORM_NAME ,
+        $3::VARCHAR PLATFORM_TYPE
+    FROM VALUES 
+      (1, 'IH_EMAIL_GOWS', 'GOWS'),
+      (2, 'SFDC_EMAIL_MSTM', 'MSTM')
+) S"INT"
+ON D.PLATFORM_NAME = S.PLATFORM_NAME
+AND D.PLATFORM_TYPE = S.PLATFORM_TYPE
+WHEN NOT MATCHED THEN 
+    INSERT(PLATFORM_ID, PLATFORM_NAME, PLATFORM_TYPE) 
+    VALUES(S.PLATFORM_ID, S.PLATFORM_NAME, S.PLATFORM_TYPE)
+WHEN MATCHED THEN 
+    UPDATE SET 
+        PLATFORM_ID = S.PLATFORM_ID,
+        PLATFORM_NAME = S.PLATFORM_NAME,
+        PLATFORM_TYPE = S.PLATFORM_TYPE;
+
+MERGE INTO REFERENCE.COMPANY D
+USING (
+    --CREATE OR REPLACE TABLE REFERENCE.COMPANY AS
+    SELECT $1::NUMBER COMPANY_ID,
+        $2::VARCHAR COMPANY_NAME,
+        $3::VARCHAR SHORT_NAME
+    FROM VALUES 
+      (1, 'INTROHIVE', 'IH'),
+      (2, 'SALESFORCE', 'SFDC')
+) S
+ON D.COMPANY_NAME = S.COMPANY_NAME
+WHEN NOT MATCHED THEN 
+    INSERT(COMPANY_ID, COMPANY_NAME, SHORT_NAME) 
+    VALUES(S.COMPANY_ID, S.COMPANY_NAME, S.SHORT_NAME)
+WHEN MATCHED THEN 
+    UPDATE SET 
+        COMPANY_ID = S.COMPANY_ID,
+        COMPANY_NAME = S.COMPANY_NAME,
+        SHORT_NAME = S.SHORT_NAME;
+
+
+/********************************************************************
+ ** Schema Configuration Section
+ ********************************************************************/
 --
 -- execute context
---USE SCHEMA _METADATA;
+--
+USE SCHEMA _METADATA;
 
 -- Clear any existing test data
 TRUNCATE TABLE CTRL_IMPORT;
@@ -1350,3 +1416,25 @@ CALL CTRL_TASK_SCHEDULER('DATA_LOADER','WORK');
 CALL CTRL_TASK_SCHEDULER('DATA_VERSION','DEBUG');
 CALL CTRL_TASK_SCHEDULER('DATA_VERSION','WORK');
 */
+
+
+/********************************************************************
+ ** Schema Update Manually
+ ********************************************************************/
+USE SCHEMA INT._METADATA;
+
+CALL CTRL_SCHEMA_UPDATER('WORK');
+
+--CALL CTRL_TASK_SCHEDULER('DATA_LOADER','DEBUG');
+--CALL CTRL_TASK_SCHEDULER('DATA_LOADER','WORK');
+
+
+
+/********************************************************************
+ ** Schema Update Manually
+ ********************************************************************/
+USE SCHEMA INT._METADATA;
+
+--CALL CTRL_TASK_SCHEDULER('DATA_LOADER','DEBUG');
+CALL CTRL_TASK_SCHEDULER('DATA_LOADER','WORK');
+
