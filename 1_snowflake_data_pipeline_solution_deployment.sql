@@ -3,6 +3,9 @@
 --
 USE DATABASE INT;
 
+/********************************************************************
+ ** Data Pipeline Solution Deployment Section
+ ********************************************************************/
 --
 -- execute context
 --
@@ -592,6 +595,11 @@ AS $$
     return result;
 $$;
 
+
+
+/********************************************************************
+ ** Data Pipeline Solution Automation Setup
+ ********************************************************************/
 --
 -- create a snow job to schedule data-load tasks;
 --
