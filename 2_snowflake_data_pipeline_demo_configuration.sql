@@ -35,7 +35,7 @@ USING (
     FROM VALUES 
       (1, 'IH_EMAIL_GOWS', 'GOWS'),
       (2, 'SFDC_EMAIL_MSTM', 'MSTM')
-) S"INT"
+) S
 ON D.PLATFORM_NAME = S.PLATFORM_NAME
 AND D.PLATFORM_TYPE = S.PLATFORM_TYPE
 WHEN NOT MATCHED THEN 
@@ -522,17 +522,25 @@ USING (
                 "FIELD_FOR_HASH": true,
                 "FIELD_FOR_KEY": true,
                 "FIELD_FOR_XREF": true,
-                "FIELD_NAME": "EMAIL",
-                "FIELD_TRANS": "MESSAGE_EMAIL",
+                "FIELD_NAME": "RECIPIENT_EMAIL_ADDRESS",
+                "FIELD_TRANS": "",
                 "FIELD_TYPE": "TEXT"
             },
             {
                 "FIELD_FOR_HASH": false,
                 "FIELD_FOR_KEY": false,
                 "FIELD_FOR_XREF": false,
-                "FIELD_NAME": "DISPLAY_NAME",
-                "FIELD_TRANS": "MESSAGE_DISPLAY_NAME",
+                "FIELD_NAME": "RECIPIENT_DISPLAY_NAME",
+                "FIELD_TRANS": "",
                 "FIELD_TYPE": "VARIANT"
+            },
+            {
+                "FIELD_FOR_HASH": false,
+                "FIELD_FOR_KEY": false,
+                "FIELD_FOR_XREF": false,
+                "FIELD_NAME": "RECIPIENT_TYPE",
+                "FIELD_TRANS": "",
+                "FIELD_TYPE": "TEXT"
             },
             {
                 "FIELD_FOR_HASH": false,
@@ -595,11 +603,12 @@ USING (
         ]$$,
         $$
         SELECT M.*, F.PLATFORM_ID,
-            EMAIL_PARSER(VALUE)['email'] MESSAGE_EMAIL, 
-            EMAIL_PARSER(VALUE)['name'] MESSAGE_DISPLAY_NAME
+            EMAIL_PARSER(VALUE)['email'] RECIPIENT_EMAIL_ADDRESS, 
+            EMAIL_PARSER(VALUE)['name'] RECIPIENT_DISPLAY_NAME,
+            'TO' RECIPIENT_TYPE
         FROM STG.IH_EMAIL_GOWS.DIGEST_MESSAGE M
         LEFT JOIN REFERENCE.PLATFORM F ON M.PLATFORM = F.PLATFORM_NAME,
-        LATERAL FLATTEN (INPUT => ARRAY_CAT(ARRAY_CONSTRUCT(SENDER), AUDIENCE))
+        LATERAL FLATTEN (INPUT => RECIPIENTS)
         $$
       ),
       (
@@ -700,7 +709,7 @@ USING (
                 SELECT EMAIL_ADDRESS, PLATFORM, LOAD_TIME 
                 FROM STG.IH_EMAIL_GOWS.DIGEST_PERSON
                 UNION ALL
-                SELECT ARRAY_APPEND(AUDIENCE, SENDER), PLATFORM, LOAD_TIME
+                SELECT ARRAY_APPEND(RECIPIENTS, SENDER), PLATFORM, LOAD_TIME
                 FROM STG.IH_EMAIL_GOWS.DIGEST_MESSAGE
             ), LATERAL FLATTEN (INPUT => EMAIL_ADDRESS)
             GROUP BY 1,2,3
@@ -1130,17 +1139,25 @@ USING (
                 "FIELD_FOR_HASH": true,
                 "FIELD_FOR_KEY": true,
                 "FIELD_FOR_XREF": true,
-                "FIELD_NAME": "EMAIL",
-                "FIELD_TRANS": "MESSAGE_EMAIL",
+                "FIELD_NAME": "RECIPIENT_EMAIL_ADDRESS",
+                "FIELD_TRANS": "",
                 "FIELD_TYPE": "TEXT"
             },
             {
                 "FIELD_FOR_HASH": false,
                 "FIELD_FOR_KEY": false,
                 "FIELD_FOR_XREF": false,
-                "FIELD_NAME": "DISPLAY_NAME",
-                "FIELD_TRANS": "MESSAGE_DISPLAY_NAME",
+                "FIELD_NAME": "RECIPIENT_DISPLAY_NAME",
+                "FIELD_TRANS": "",
                 "FIELD_TYPE": "VARIANT"
+            },
+            {
+                "FIELD_FOR_HASH": false,
+                "FIELD_FOR_KEY": false,
+                "FIELD_FOR_XREF": false,
+                "FIELD_NAME": "RECIPIENT_TYPE",
+                "FIELD_TRANS": "",
+                "FIELD_TYPE": "TEXT"
             },
             {
                 "FIELD_FOR_HASH": false,
@@ -1203,11 +1220,12 @@ USING (
         ]$$,
         $$
         SELECT M.*, F.PLATFORM_ID,
-            EMAIL_PARSER(VALUE)['email'] MESSAGE_EMAIL, 
-            EMAIL_PARSER(VALUE)['name'] MESSAGE_DISPLAY_NAME
+            EMAIL_PARSER(VALUE)['email'] RECIPIENT_EMAIL_ADDRESS, 
+            EMAIL_PARSER(VALUE)['name'] RECIPIENT_DISPLAY_NAME,
+            'TO' RECIPIENT_TYPE
         FROM STG.SFDC_EMAIL_MSTM.DIGEST_MESSAGE M
         LEFT JOIN REFERENCE.PLATFORM F ON M.PLATFORM = F.PLATFORM_NAME,
-        LATERAL FLATTEN (INPUT => ARRAY_CAT(ARRAY_CONSTRUCT(SENDER), AUDIENCE))
+        LATERAL FLATTEN (INPUT => RECIPIENTS)
         $$
       ),
       (
@@ -1308,7 +1326,7 @@ USING (
                 SELECT EMAIL_ADDRESS, PLATFORM, LOAD_TIME 
                 FROM STG.SFDC_EMAIL_MSTM.DIGEST_PERSON
                 UNION ALL
-                SELECT ARRAY_APPEND(AUDIENCE, SENDER), PLATFORM, LOAD_TIME
+                SELECT ARRAY_APPEND(RECIPIENTS, SENDER), PLATFORM, LOAD_TIME
                 FROM STG.SFDC_EMAIL_MSTM.DIGEST_MESSAGE
             ), LATERAL FLATTEN (INPUT => EMAIL_ADDRESS)
             GROUP BY 1,2,3
