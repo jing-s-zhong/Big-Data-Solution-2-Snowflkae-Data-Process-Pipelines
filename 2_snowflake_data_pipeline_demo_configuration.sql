@@ -41,8 +41,8 @@ USING (
         $2::VARCHAR PLATFORM_NAME ,
         $3::VARCHAR PLATFORM_TYPE
     FROM VALUES 
-      (1, 'CILENT1_EMAIL_GOWS', 'GOWS'),
-      (2, 'CILENT2_EMAIL_MSTM', 'MSTM')
+      (1, 'CILENT1_EMAIL_SALES', 'SALES'),
+      (2, 'CILENT2_EMAIL_TECHS', 'TECHS')
 ) S
 ON D.PLATFORM_NAME = S.PLATFORM_NAME
 AND D.PLATFORM_TYPE = S.PLATFORM_TYPE
@@ -102,7 +102,7 @@ USING (
         $2 PLATFORM_NAME,
         $3 PLATFORM_TYPE,
         'INT' DATA_CATALOG,
-        CONCAT($1, '_', $2, '_', $3) DATA_SCHEMA,
+        CONCAT_WS('_', $1, $2, $3) DATA_SCHEMA,
         $4 DATA_NAME,
         NULL /*PARSE_JSON($5)*/ DATA_STAGE,
         NULL /*PARSE_JSON($6)*/ DATA_FORMAT,
@@ -116,10 +116,10 @@ USING (
       (
         'CILENT1',
         'EMAIL',
-        'GOWS',
+        'SALES',
         'PERSON',
-        $$['URL = \'s3://af-data-des-sandbox/ingest/jing/data1/\'', 'STORAGE_INTEGRATION = DES_INTEGRATION']$$,
-        $$['TYPE = JSON']$$,
+        $$['<external_storage_integation>']$$,
+        $$['TYPE = <data_format_type>']$$,
         $$[
             {
                 "FIELD_FOR_HASH": true,
@@ -246,7 +246,7 @@ USING (
         ]$$,
         $$
         SELECT P.*, S.SCORE, C.ORGANIZATION_ID, F.PLATFORM_ID
-        FROM STG.CILENT1_EMAIL_GOWS.DIGEST_PERSON P 
+        FROM STG.CILENT1_EMAIL_SALES.DIGEST_PERSON P 
         LEFT JOIN REFERENCE.TILE_SCORE S ON P.TITLE = S.TITLE
         LEFT JOIN REFERENCE.ORGANIZATION C ON P.ORGANIZATION = C.SHORT_NAME
         LEFT JOIN REFERENCE.PLATFORM F ON P.PLATFORM = F.PLATFORM_NAME
@@ -255,10 +255,10 @@ USING (
       (
         'CILENT1',
         'EMAIL',
-        'GOWS',
+        'SALES',
         'PERSON_EMAIL',
-        $$['URL = \'s3://af-data-des-sandbox/ingest/jing/data1/\'', 'STORAGE_INTEGRATION = DES_INTEGRATION']$$,
-        $$['TYPE = JSON']$$,
+        $$['<external_storage_integation>']$$,
+        $$['TYPE = <data_format_type>']$$,
         $$[
             {
                 "FIELD_FOR_HASH": true,
@@ -347,7 +347,7 @@ USING (
         SELECT P.*, F.PLATFORM_ID,
             EMAIL_PARSER(VALUE)['email'] PERSON_EMAIL, 
             EMAIL_PARSER(VALUE)['name'] PERSON_DISPLAY_NAME
-        FROM STG.CILENT1_EMAIL_GOWS.DIGEST_PERSON P
+        FROM STG.CILENT1_EMAIL_SALES.DIGEST_PERSON P
         LEFT JOIN REFERENCE.PLATFORM F ON P.PLATFORM = F.PLATFORM_NAME,
         LATERAL FLATTEN (INPUT => EMAIL_ADDRESS)
         $$
@@ -355,10 +355,10 @@ USING (
       (
         'CILENT1',
         'EMAIL',
-        'GOWS',
+        'SALES',
         'MESSAGE',
-        $$['URL = \'s3://af-data-des-sandbox/ingest/jing/data1/\'', 'STORAGE_INTEGRATION = DES_INTEGRATION']$$,
-        $$['TYPE = JSON']$$,
+        $$['<external_storage_integation>']$$,
+        $$['TYPE = <data_format_type>']$$,
         $$[
             {
                 "FIELD_FOR_HASH": true,
@@ -501,7 +501,7 @@ USING (
         ]$$,
         $$
         SELECT M.*, F.PLATFORM_ID
-        FROM STG.CILENT1_EMAIL_GOWS.DIGEST_MESSAGE M
+        FROM STG.CILENT1_EMAIL_SALES.DIGEST_MESSAGE M
         LEFT JOIN REFERENCE.PLATFORM F
         ON M.PLATFORM = F.PLATFORM_NAME
         $$
@@ -509,10 +509,10 @@ USING (
       (
         'CILENT1',
         'EMAIL',
-        'GOWS',
+        'SALES',
         'MESSAGE_EMAIL',
-        $$['URL = \'s3://af-data-des-sandbox/ingest/jing/data1/\'', 'STORAGE_INTEGRATION = DES_INTEGRATION']$$,
-        $$['TYPE = JSON']$$,
+        $$['<external_storage_integation>']$$,
+        $$['TYPE = <data_format_type>']$$,
         $$[
             {
                 "FIELD_FOR_HASH": true,
@@ -618,7 +618,7 @@ USING (
             EMAIL_PARSER(VALUE)['email'] RECIPIENT_EMAIL_ADDRESS, 
             EMAIL_PARSER(VALUE)['name'] RECIPIENT_DISPLAY_NAME,
             'TO' RECIPIENT_TYPE
-        FROM STG.CILENT1_EMAIL_GOWS.DIGEST_MESSAGE M
+        FROM STG.CILENT1_EMAIL_SALES.DIGEST_MESSAGE M
         LEFT JOIN REFERENCE.PLATFORM F ON M.PLATFORM = F.PLATFORM_NAME,
         LATERAL FLATTEN (INPUT => RECIPIENTS)
         $$
@@ -626,10 +626,10 @@ USING (
       (
         'CILENT1',
         'EMAIL',
-        'GOWS',
+        'SALES',
         'EMAIL_ADDRESS',
-        $$['URL = \'s3://af-data-des-sandbox/ingest/jing/data1/\'', 'STORAGE_INTEGRATION = DES_INTEGRATION']$$,
-        $$['TYPE = JSON']$$,
+        $$['<external_storage_integation>']$$,
+        $$['TYPE = <data_format_type>']$$,
         $$[
             {
                 "FIELD_FOR_HASH": true,
@@ -719,10 +719,10 @@ USING (
                 MAX(LOAD_TIME) LOAD_TIME
              FROM (
                 SELECT EMAIL_ADDRESS, PLATFORM, LOAD_TIME 
-                FROM STG.CILENT1_EMAIL_GOWS.DIGEST_PERSON
+                FROM STG.CILENT1_EMAIL_SALES.DIGEST_PERSON
                 UNION ALL
                 SELECT ARRAY_APPEND(RECIPIENTS, SENDER), PLATFORM, LOAD_TIME
-                FROM STG.CILENT1_EMAIL_GOWS.DIGEST_MESSAGE
+                FROM STG.CILENT1_EMAIL_SALES.DIGEST_MESSAGE
             ), LATERAL FLATTEN (INPUT => EMAIL_ADDRESS)
             GROUP BY 1,2,3
         ) A
@@ -733,10 +733,10 @@ USING (
       (
         'CILENT2',
         'EMAIL',
-        'MSTM',
+        'TECHS',
         'PERSON',
-        $$['URL = \'s3://af-data-des-sandbox/ingest/jing/data2/\'', 'STORAGE_INTEGRATION = DES_INTEGRATION']$$,
-        $$['TYPE = JSON']$$,
+        $$['<external_storage_integation>']$$,
+        $$['TYPE = <data_format_type>']$$,
         $$[
             {
                 "FIELD_FOR_HASH": true,
@@ -863,7 +863,7 @@ USING (
         ]$$,
         $$
         SELECT P.*, S.SCORE, C.ORGANIZATION_ID, F.PLATFORM_ID
-        FROM STG.CILENT2_EMAIL_MSTM.DIGEST_PERSON P 
+        FROM STG.CILENT2_EMAIL_TECHS.DIGEST_PERSON P 
         LEFT JOIN REFERENCE.TILE_SCORE S ON P.TITLE = S.TITLE
         LEFT JOIN REFERENCE.ORGANIZATION C ON P.ORGANIZATION = C.SHORT_NAME
         LEFT JOIN REFERENCE.PLATFORM F ON P.PLATFORM = F.PLATFORM_NAME
@@ -872,10 +872,10 @@ USING (
       (
         'CILENT2',
         'EMAIL',
-        'MSTM',
+        'TECHS',
         'PERSON_EMAIL',
-        $$['URL = \'s3://af-data-des-sandbox/ingest/jing/data1/\'', 'STORAGE_INTEGRATION = DES_INTEGRATION']$$,
-        $$['TYPE = JSON']$$,
+        $$['<external_storage_integation>']$$,
+        $$['TYPE = <data_format_type>']$$,
         $$[
             {
                 "FIELD_FOR_HASH": true,
@@ -964,7 +964,7 @@ USING (
         SELECT P.*, F.PLATFORM_ID,
             EMAIL_PARSER(VALUE)['email'] PERSON_EMAIL, 
             EMAIL_PARSER(VALUE)['name'] PERSON_DISPLAY_NAME
-        FROM STG.CILENT2_EMAIL_MSTM.DIGEST_PERSON P
+        FROM STG.CILENT2_EMAIL_TECHS.DIGEST_PERSON P
         LEFT JOIN REFERENCE.PLATFORM F ON P.PLATFORM = F.PLATFORM_NAME,
         LATERAL FLATTEN (INPUT => EMAIL_ADDRESS)
         $$
@@ -972,10 +972,10 @@ USING (
       (
         'CILENT2',
         'EMAIL',
-        'MSTM',
+        'TECHS',
         'MESSAGE',
-        $$['URL = \'s3://af-data-des-sandbox/ingest/jing/data2/\'', 'STORAGE_INTEGRATION = DES_INTEGRATION']$$,
-        $$['TYPE = JSON']$$,
+        $$['<external_storage_integation>']$$,
+        $$['TYPE = <data_format_type>']$$,
         $$[
             {
                 "FIELD_FOR_HASH": true,
@@ -1118,7 +1118,7 @@ USING (
         ]$$,
         $$
         SELECT M.*, F.PLATFORM_ID
-        FROM STG.CILENT2_EMAIL_MSTM.DIGEST_MESSAGE M
+        FROM STG.CILENT2_EMAIL_TECHS.DIGEST_MESSAGE M
         LEFT JOIN REFERENCE.PLATFORM F
         ON M.PLATFORM = F.PLATFORM_NAME
         $$
@@ -1126,10 +1126,10 @@ USING (
       (
         'CILENT2',
         'EMAIL',
-        'MSTM',
+        'TECHS',
         'MESSAGE_EMAIL',
-        $$['URL = \'s3://af-data-des-sandbox/ingest/jing/data1/\'', 'STORAGE_INTEGRATION = DES_INTEGRATION']$$,
-        $$['TYPE = JSON']$$,
+        $$['<external_storage_integation>']$$,
+        $$['TYPE = <data_format_type>']$$,
         $$[
             {
                 "FIELD_FOR_HASH": false,
@@ -1235,7 +1235,7 @@ USING (
             EMAIL_PARSER(VALUE)['email'] RECIPIENT_EMAIL_ADDRESS, 
             EMAIL_PARSER(VALUE)['name'] RECIPIENT_DISPLAY_NAME,
             'TO' RECIPIENT_TYPE
-        FROM STG.CILENT2_EMAIL_MSTM.DIGEST_MESSAGE M
+        FROM STG.CILENT2_EMAIL_TECHS.DIGEST_MESSAGE M
         LEFT JOIN REFERENCE.PLATFORM F ON M.PLATFORM = F.PLATFORM_NAME,
         LATERAL FLATTEN (INPUT => RECIPIENTS)
         $$
@@ -1243,10 +1243,10 @@ USING (
       (
         'CILENT2',
         'EMAIL',
-        'MSTM',
+        'TECHS',
         'EMAIL_ADDRESS',
-        $$['URL = \'s3://af-data-des-sandbox/ingest/jing/data1/\'', 'STORAGE_INTEGRATION = DES_INTEGRATION']$$,
-        $$['TYPE = JSON']$$,
+        $$['<external_storage_integation>']$$,
+        $$['TYPE = <data_format_type>']$$,
         $$[
             {
                 "FIELD_FOR_HASH": true,
@@ -1336,10 +1336,10 @@ USING (
                 MAX(LOAD_TIME) LOAD_TIME
              FROM (
                 SELECT EMAIL_ADDRESS, PLATFORM, LOAD_TIME 
-                FROM STG.CILENT2_EMAIL_MSTM.DIGEST_PERSON
+                FROM STG.CILENT2_EMAIL_TECHS.DIGEST_PERSON
                 UNION ALL
                 SELECT ARRAY_APPEND(RECIPIENTS, SENDER), PLATFORM, LOAD_TIME
-                FROM STG.CILENT2_EMAIL_MSTM.DIGEST_MESSAGE
+                FROM STG.CILENT2_EMAIL_TECHS.DIGEST_MESSAGE
             ), LATERAL FLATTEN (INPUT => EMAIL_ADDRESS)
             GROUP BY 1,2,3
         ) A

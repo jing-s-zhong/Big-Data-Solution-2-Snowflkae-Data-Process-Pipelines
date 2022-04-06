@@ -90,36 +90,36 @@ WITH SQL_SYNTAX_TEMPLATES AS ( -- SQL syntax templates
 FUNCTIONAL_CODE_BLOCKS AS ( -- data pipeline DDL code blocks
   SELECT CODE_BLOCK_ID, DEPLOYMENT_TYPE, PIPELINE_OPERATION_TYPE, ARRAY_AGG(TRY_TO_NUMBER(VALUE)) WITHIN GROUP (ORDER BY INDEX) CODE_SYNTAX_ARRAY
   FROM ( SELECT $1 CODE_BLOCK_ID, $2 DEPLOYMENT_TYPE, $3 PIPELINE_OPERATION_TYPE, $4 CODE_SYNTAX_TEMPLATE_REF FROM VALUES
-    (10, 'INGESTION', 'PIPELINE_REMOVE', CONCAT(-- Remove a data ingestion pipeline
-        '401,', --Drop digest view
-        '402,', --Drop xref table
-        '403,', --Drop data table
-        '404,', --Drop raw data stream
-        --'405,', --Drop raw data stage
-        '406,', --Drop raw data table
-        --'407,'  --Drop data file format
+    (10, 'INGESTION', 'PIPELINE_REMOVE', CONCAT_WS(',', -- Remove a data ingestion pipeline
+        '401', --Drop digest view
+        '402', --Drop xref table
+        '403', --Drop data table
+        '404', --Drop raw data stream
+        --'405', --Drop raw data stage
+        '406', --Drop raw data table
+        --'407'  --Drop data file format
         '')),
-    (11, 'INGESTION', 'PIPELINE_CREATE', CONCAT(-- Create a data ingestion pipeline
-        --'201,', --Create data file format
-        '202,', --Create raw data table
-        --'203,', --Create raw data stage
-        '204,', --Create raw data stream
-        '205,', --Create data table
-        '206,', --Create xref table
-        '207,', --Create digest view
-        '301,', --Grant raw table permission
-        --'302,', --Grant raw stage permission
+    (11, 'INGESTION', 'PIPELINE_CREATE', CONCAT_WS(',', -- Create a data ingestion pipeline
+        --'201', --Create data file format
+        '202', --Create raw data table
+        --'203', --Create raw data stage
+        '204', --Create raw data stream
+        '205', --Create data table
+        '206', --Create xref table
+        '207', --Create digest view
+        '301', --Grant raw table permission
+        --'302', --Grant raw stage permission
         '')),
-    (20, 'INTEGRATION', 'PIPELINE_REMOVE', CONCAT(-- Remove a data integration pipeline
-        '401,', --Drop digest view
-        '402,', --Drop xref table
-        '403,', --Drop data table
-        '404,',  --Drop raw data stream
+    (20, 'INTEGRATION', 'PIPELINE_REMOVE', CONCAT_WS(',', -- Remove a data integration pipeline
+        '401', --Drop digest view
+        '402', --Drop xref table
+        '403', --Drop data table
+        '404',  --Drop raw data stream
         '')),
-    (21, 'INTEGRATION', 'PIPELINE_CREATE', CONCAT(-- Create a data integration pipeline
-        '205,', --Create data table
-        '206,', --Create xref table
-        '207,', --Create digest view
+    (21, 'INTEGRATION', 'PIPELINE_CREATE', CONCAT_WS(',', -- Create a data integration pipeline
+        '205', --Create data table
+        '206', --Create xref table
+        '207', --Create digest view
         ''))
   ),
   LATERAL SPLIT_TO_TABLE (CODE_SYNTAX_TEMPLATE_REF, ',')
@@ -128,14 +128,14 @@ FUNCTIONAL_CODE_BLOCKS AS ( -- data pipeline DDL code blocks
 ),
 PIPELINE_DEPLOYMENT_TYPES AS ( -- data pipeline operation types
   SELECT $1 DEPLOYMENT_TYPE_ID, $2 DEPLOYMENT_TYPE, SPLIT($3, ',') DEPLOYMENT_TARGET_DATABASE FROM VALUES
-    (10, 'INGESTION', CONCAT(-- Deploy to stage for data ingestion
-        'STG,', -- stage db name list
-        'STAGE,',
-        'STAGING,',
+    (10, 'INGESTION', CONCAT_WS(',', -- Deploy to stage for data ingestion
+        'STG', -- stage db name list
+        'STAGE',
+        'STAGING',
         '')),
-    (20, 'INTEGRATION', CONCAT(-- Deploy to integration for data integration
-        'INT,', -- integration db name list
-        'INTEGRATION,',
+    (20, 'INTEGRATION', CONCAT_WS(',', -- Deploy to integration for data integration
+        'INT', -- integration db name list
+        'INTEGRATION',
         ''))
 ),
 PIPELINE_OPERATION_STATES AS (
