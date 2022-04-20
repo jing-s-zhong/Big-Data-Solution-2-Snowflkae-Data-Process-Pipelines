@@ -1,2 +1,2 @@
-# Big-Data-Solution-2-Snowflkae-Data-Process-Pipelines
+# Big Data Solution (2): Snowflkae Data Process Pipelines
 
